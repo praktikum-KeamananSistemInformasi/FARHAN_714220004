@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perbandingan Hash File</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background-color: white;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 12px;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        tr:hover {
+            background-color: #e1e1e1;
+        }
+        form {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        label {
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="number"], textarea {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="submit"] {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #2980b9;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+</head>
+<body>
+    <h1>Perbandingan Hash File</h1>
+    
+    <h2>Informasi Hash</h2>
+    <table>
+        <tr>
+            <th>Deskripsi</th>
+            <th>Hash</th>
+        </tr>
+        <tr>
+            <td>Hash Asli</td>
+            <td id="original-hash">Loading...</td>
+        </tr>
+        <tr>
+            <td>Hash Dimodifikasi</td>
+            <td id="modified-hash">Loading...</td>
+        </tr>
+    </table>
+
+    <h2>Perbandingan Isi File</h2>
+    <table>
+        <tr>
+            <th>Nomor Baris</th>
+            <th>Isi Asli</th>
+            <th>Isi Dimodifikasi</th>
+        </tr>
+        <tbody id="file-content">
+            <!-- Konten file akan dipopulasi di sini -->
+        </tbody>
+    </table>
+
+    <h2>Update Data di File</h2>
+    <form onsubmit="updateData(event);">
+        <label for="line_number">Nomor Baris:</label>
+        <input type="number" id="line_number" min="1" placeholder="Masukkan nomor baris" required>
+        
+        <label for="new_data">Data Baru:</label>
+        <textarea id="new_data" rows="4" cols="50" placeholder="Masukkan data baru di sini..." required></textarea>
+        
+        <input type="submit" value="Update Data">
+    </form>
+
+    <script>
+        let originalHash = "";
+        let modifiedHash = "";
+        let fileContents = [];
+
+        // Fungsi untuk memuat konten dari data.txt
+        async function loadContents() {
+            const response = await fetch('data.txt');
+            const fileData = await response.text();
+            fileContents = fileData.split('\n');
+            originalHash = calculateHash(fileData);
+            modifiedHash = originalHash; // Inisialisasi dengan hash asli
+            updateTable();
+        }
+
+        // Fungsi untuk menghitung hash
+        function calculateHash(data) {
+            return CryptoJS.SHA256(data).toString();
+        }
+
+        // Fungsi untuk memperbarui tabel
+        function updateTable() {
+            const fileContentTable = document.getElementById('file-content');
+            fileContentTable.innerHTML = "";
+
+            fileContents.forEach((line, index) => {
+                fileContentTable.innerHTML += `<tr>
+                    <td>${index + 1}</td>
+                    <td>${line}</td>
+                    <td>${line}</td>
+                </tr>`;
+            });
+
+            document.getElementById('original-hash').innerText = originalHash;
+            document.getElementById('modified-hash').innerText = modifiedHash;
+        }
+
+        // Fungsi untuk memperbarui data
+        function updateData(event) {
+            event.preventDefault(); // Cegah pengiriman form
+            const lineNumber = parseInt(document.getElementById('line_number').value) - 1; // Menghitung indeks baris
+            const newData = document.getElementById('new_data').value;
+
+            if (lineNumber >= 0 && lineNumber < fileContents.length) {
+                fileContents[lineNumber] = newData; // Update isi file
+                modifiedHash = calculateHash(fileContents.join('\n')); // Hitung hash setelah modifikasi
+                document.getElementById('new_data').value = ''; // Kosongkan input
+                updateTable(); // Perbarui tabel
+            } else {
+                alert("Nomor baris tidak valid!");
+            }
+        }
+
+        // Muat konten saat halaman dimuat
+        loadContents();
+    </script>
+</body>
+</html>
